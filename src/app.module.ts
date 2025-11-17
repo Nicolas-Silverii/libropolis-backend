@@ -13,7 +13,7 @@ import { LibrosModule } from './libros/libros.module';
       password: 'root',
       database: 'libropolis',
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
 
     }),
     LibrosModule,
