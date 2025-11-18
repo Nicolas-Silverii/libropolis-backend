@@ -16,19 +16,19 @@ import { Libro } from './libro.entity';
 export class LibrosController {
   constructor(private readonly librosService: LibrosService) {}
 
-  // 🧾 GET /libros → lista todos los libros en la base
+  //Lista todos los libros en la base
   @Get()
   findAll(): Promise<Libro[]> {
     return this.librosService.findAll();
   }
 
-  // 🆕 POST /libros → crea un libro manualmente
+  //crea un libro manualmente
   @Post()
   create(@Body() dto: CreateLibroDto): Promise<Libro> {
     return this.librosService.create(dto);
   }
 
-  // ✏️ PUT /libros/:id → actualiza un libro por ID
+  //actualiza un libro por ID
   @Put(':id')
   update(
     @Param('id') id: string,
