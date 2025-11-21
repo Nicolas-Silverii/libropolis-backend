@@ -14,7 +14,7 @@ export class LibrosService {
     private readonly http: HttpService,
   ) {}
 
-  // 📚 CRUD básico
+  // CRUD 
   async findAll(): Promise<Libro[]> {
     return this.libroRepo.find();
   }
@@ -37,24 +37,28 @@ export class LibrosService {
     await this.libroRepo.remove(libro);
   }
 
-  // 🔍 Consulta Open Library y devuelve libros
+  // Consulta Open Library y devuelve libros
   async buscarEnOpenLibrary(titulo: string): Promise<Partial<Libro>[]> {
     const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}`;
     const response = await firstValueFrom(this.http.get(url));
     const docs = response.data.docs;
+    console.log("🔍 Docs recibidos:", docs.slice(0, 3));
+
 
     return docs.slice(0, 10).map((doc) => ({
       titulo: doc.title ?? 'Sin título',
       autor: doc.author_name?.[0] ?? 'Desconocido',
       anio: doc.first_publish_year ?? null,
       imagen_url: doc.cover_i
-        ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-        : null,
+      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+      : doc.cover_edition_key
+      ? `https://covers.openlibrary.org/b/olid/${doc.cover_edition_key}-M.jpg`
+      : null,
       descripcion: doc.subject?.slice(0, 3).join(', ') ?? 'Sin descripción',
     }));
   }
 
-  // 💾 Busca y guarda libros en la base
+  // Busca y guarda libros en la base
   async crearDesdeOpenLibrary(titulo: string): Promise<Libro[]> {
     const librosExternos = await this.buscarEnOpenLibrary(titulo);
     const librosGuardados: Libro[] = [];
