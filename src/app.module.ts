@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LibrosModule } from './libros/libros.module';
  
 
+//Conexión desde Nest
 @Module({
   imports: [
     TypeOrmModule.forRoot({
