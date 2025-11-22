@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { LibrosService } from './libros.service';
 import { CreateLibroDto } from './dto/create-libro.dto';
-import { Libro } from './libro.entity';
+import { Libro } from '../entidades/libro.entity';
 
 @Controller('libros')
 export class LibrosController {
