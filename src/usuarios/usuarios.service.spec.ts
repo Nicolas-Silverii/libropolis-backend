@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LibrosService } from './libros.service';
-import { LibrosModule } from './libros.module';
+import { UsuariosService } from './usuarios.service';
+import { UsuariosModule } from './usuarios.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Libro } from '../entidades/libro.entity';
 import { Usuario } from '../entidades/usuario.entity';
-import { HttpModule } from '@nestjs/axios';
+import { Libro } from '../entidades/libro.entity';
 
-describe('LibrosService', () => {
-  let service: LibrosService;
+describe('UsuariosService', () => {
+  let service: UsuariosService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -15,18 +14,17 @@ describe('LibrosService', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [Libro, Usuario],
+          entities: [Usuario, Libro],
           synchronize: true,
         }),
-        LibrosModule,
-        HttpModule,
+        UsuariosModule,
       ],
     }).compile();
 
-    service = module.get<LibrosService>(LibrosService);
+    service = module.get<UsuariosService>(UsuariosService);
   });
 
-  it('Debe definirse', () => {
+  it('deberia definirse', () => {
     expect(service).toBeDefined();
   });
 });

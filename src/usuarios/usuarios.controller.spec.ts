@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LibrosService } from './libros.service';
-import { LibrosModule } from './libros.module';
+import { UsuariosController } from './usuarios.controller';
+import { UsuariosModule } from './usuarios.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Libro } from '../entidades/libro.entity';
 import { Usuario } from '../entidades/usuario.entity';
-import { HttpModule } from '@nestjs/axios';
+import { Libro } from '../entidades/libro.entity';
 
-describe('LibrosService', () => {
-  let service: LibrosService;
+describe('UsuariosController', () => {
+  let controller: UsuariosController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,15 +17,14 @@ describe('LibrosService', () => {
           entities: [Libro, Usuario],
           synchronize: true,
         }),
-        LibrosModule,
-        HttpModule,
+        UsuariosModule,
       ],
     }).compile();
 
-    service = module.get<LibrosService>(LibrosService);
+    controller = module.get<UsuariosController>(UsuariosController);
   });
 
   it('Debe definirse', () => {
-    expect(service).toBeDefined();
+    expect(controller).toBeDefined();
   });
 });

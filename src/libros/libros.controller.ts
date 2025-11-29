@@ -49,9 +49,14 @@ export class LibrosController {
     return this.librosService.buscarEnOpenLibrary(titulo);
   }
 
-  //POST buscar y guarda libros en la base
+  // buscar y guarda libros en la base
   @Post('importar')
   importar(@Query('titulo') titulo: string): Promise<Libro[]> {
     return this.librosService.crearDesdeOpenLibrary(titulo);
+  }
+
+   @Get('random')
+  random(): Promise<Partial<Libro>[]> {
+    return this.librosService.obtenerLibrosRandom();
   }
 }
