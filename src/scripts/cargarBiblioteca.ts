@@ -1,31 +1,33 @@
-import { AppDataSource } from '../data-source';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from '../app.module';
 import { Usuario } from '../entidades/usuario.entity';
 import { Libro } from '../entidades/libro.entity';
-
+import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 
 async function cargarBiblioteca() {
-  await AppDataSource.initialize();
+  const app = await NestFactory.createApplicationContext(AppModule);
+  const dataSource = app.get(DataSource);
 
-  const usuarioRepo = AppDataSource.getRepository(Usuario);
-  const libroRepo = AppDataSource.getRepository(Libro);
-  
-  // Verificar si ya existe
+  const usuarioRepo = dataSource.getRepository(Usuario);
+  const libroRepo = dataSource.getRepository(Libro);
+
+  // Crear admin si no existe
   let usuario = await usuarioRepo.findOneBy({ email: 'admin@libropolis.com' });
-
   if (!usuario) {
+    const claveHash = await bcrypt.hash('admin1234', 10);
     usuario = usuarioRepo.create({
       nombre: 'Admin',
       apellido: 'Libropolis',
       email: 'admin@libropolis.com',
-      contraseña: 'admin1234',
+      password: claveHash,
       rol: 'admin',
     });
-
     await usuarioRepo.save(usuario);
   }
 
-  // Verificar si ya existe
- let principito = await libroRepo.findOneBy({ titulo: 'El Principito' });
+  // Crear libros si no existen
+  let principito = await libroRepo.findOneBy({ titulo: 'El Principito' });
   if (!principito) {
     principito = libroRepo.create({
       titulo: 'El Principito',
@@ -39,7 +41,6 @@ async function cargarBiblioteca() {
     await libroRepo.save(principito);
   }
 
-  // Verificar si ya existe
   let origen = await libroRepo.findOneBy({ titulo: 'El origen de las especies' });
   if (!origen) {
     origen = libroRepo.create({
@@ -55,7 +56,7 @@ async function cargarBiblioteca() {
   }
 
   console.log('Biblioteca cargada con libros');
-  await AppDataSource.destroy();
+  await app.close();
 }
 
 cargarBiblioteca();
