@@ -79,4 +79,27 @@ export class LibrosService {
 
     return librosGuardados;
   }
+
+    //Obtener 10–15 libros 
+  async obtenerLibrosRandom(): Promise<Partial<Libro>[]> {
+    const url = `https://openlibrary.org/search.json?q=book`;
+    const response = await firstValueFrom(this.http.get(url));
+    const docs = response.data.docs;
+
+    // tomar los primeros 100 y elegir 10–15 random
+    const cantidad = Math.floor(Math.random() * (15 - 10 + 1)) + 10;
+    const seleccionados = docs
+      .sort(() => 0.5 - Math.random())
+      .slice(0, cantidad);
+
+    return seleccionados.map((doc) => ({
+      titulo: doc.title ?? 'Sin título',
+      autor: doc.author_name?.[0] ?? 'Desconocido',
+      anio: doc.first_publish_year ?? null,
+      imagen_url: doc.cover_i
+        ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+        : null,
+      descripcion: doc.subject?.slice(0, 3).join(', ') ?? 'Sin descripción',
+    }));
+  }
 }
