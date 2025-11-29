@@ -26,7 +26,7 @@ describe('LibrosService', () => {
     service = module.get<LibrosService>(LibrosService);
   });
 
-  it('should be defined', () => {
+  it('Debe definirse', () => {
     expect(service).toBeDefined();
   });
 });
