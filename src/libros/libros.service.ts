@@ -64,6 +64,7 @@ export class LibrosService {
     const formats = doc.formats || {};
 
     const fileUrl =
+      formats['application/pdf'] ||
       formats['text/plain; charset=us-ascii'] ||
       formats['application/epub+zip'] ||
       formats['application/x-mobipocket-ebook'] ||
@@ -81,12 +82,10 @@ export class LibrosService {
       descripcion: doc.subjects?.slice(0, 3).join(', ') ?? 'Sin descripción',
       fileUrl,
       tipo: fileUrl
-        ? fileUrl.includes('epub')
-          ? 'epub'
-          : fileUrl.includes('mobi')
-          ? 'mobi'
-          : fileUrl.includes('txt')
-          ? 'txt'
+          ? fileUrl.includes('pdf')  ? 'pdf'
+          : fileUrl.includes('epub') ? 'epub'
+          : fileUrl.includes('mobi') ? 'mobi'
+          : fileUrl.includes('txt')  ? 'txt'
           : 'html'
         : null,
     });
