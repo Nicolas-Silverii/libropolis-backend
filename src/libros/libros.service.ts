@@ -6,6 +6,14 @@ import { CreateLibroDto } from './dto/create-libro.dto';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 
+interface GutendexDoc {
+  id: number;
+  title: string;
+  authors?: { name: string }[];
+  formats?: Record<string, string>;
+  subjects?: string[];
+}
+
 @Injectable()
 export class LibrosService {
   constructor(
@@ -14,7 +22,7 @@ export class LibrosService {
     private readonly http: HttpService,
   ) {}
 
-  // CRUD 
+  // CRUD
   async findAll(): Promise<Libro[]> {
     return this.libroRepo.find();
   }
@@ -31,48 +39,79 @@ export class LibrosService {
     return this.libroRepo.save(libro);
   }
 
-  async remove(id: number): Promise<void> {
+  async findOne(id: number): Promise<Libro> {
+    const libro = await this.libroRepo.findOneBy({ id });
+    if (!libro) throw new NotFoundException('Libro no encontrado');
+    return libro;
+  }
+
+  async remove(id: number): Promise<{ message: string }> {
     const libro = await this.libroRepo.findOneBy({ id });
     if (!libro) throw new NotFoundException('Libro no encontrado');
     await this.libroRepo.remove(libro);
+    return { message: 'Libro eliminado correctamente' };
   }
 
-  // Consulta Open Library y devuelve libros
-  async buscarEnOpenLibrary(titulo: string): Promise<Partial<Libro>[]> {
-    const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(titulo)}`;
-    const response = await firstValueFrom(this.http.get(url));
-    const docs = response.data.docs;
-    console.log("🔍 Docs recibidos:", docs.slice(0, 3));
+  // Buscar libros en Gutendex (aceptando TXT/EPUB como lectura real)
+ async buscarEnGutendex(titulo: string): Promise<Partial<Libro>[]> {
+  const url = `https://gutendex.com/books?search=${encodeURIComponent(titulo)}`;
+  const response = await firstValueFrom(this.http.get(url));
+  const docs = response.data.results;
 
+  const libros: Partial<Libro>[] = [];
 
-    return docs.slice(0, 10).map((doc) => ({
+  for (const doc of docs.slice(0, 10)) {
+    const formats = doc.formats || {};
+
+    const fileUrl =
+      formats['application/pdf'] ||
+      formats['text/plain; charset=us-ascii'] ||
+      formats['application/epub+zip'] ||
+      formats['application/x-mobipocket-ebook'] ||
+      formats['text/html'] ||
+      null;
+
+    libros.push({
+      id: doc.id,
       titulo: doc.title ?? 'Sin título',
-      autor: doc.author_name?.[0] ?? 'Desconocido',
-      anio: doc.first_publish_year ?? null,
-      imagen_url: doc.cover_i
-      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-      : doc.cover_edition_key
-      ? `https://covers.openlibrary.org/b/olid/${doc.cover_edition_key}-M.jpg`
-      : null,
-      descripcion: doc.subject?.slice(0, 3).join(', ') ?? 'Sin descripción',
-    }));
+      autor: doc.authors?.[0]?.name ?? 'Desconocido',
+      anio: null,
+      imagen_url:
+        formats['image/jpeg'] ||
+        'https://via.placeholder.com/120x180?text=Sin+portada',
+      descripcion: doc.subjects?.slice(0, 3).join(', ') ?? 'Sin descripción',
+      fileUrl,
+      tipo: fileUrl
+          ? fileUrl.includes('pdf')  ? 'pdf'
+          : fileUrl.includes('epub') ? 'epub'
+          : fileUrl.includes('mobi') ? 'mobi'
+          : fileUrl.includes('txt')  ? 'txt'
+          : 'html'
+        : null,
+    });
   }
 
-  // Busca y guarda libros en la base
-  async crearDesdeOpenLibrary(titulo: string): Promise<Libro[]> {
-    const librosExternos = await this.buscarEnOpenLibrary(titulo);
+  return libros;
+}
+
+  // Buscar y guardar libros en la base desde Gutendex
+  async crearDesdeGutendex(titulo: string): Promise<Libro[]> {
+    const librosExternos = await this.buscarEnGutendex(titulo);
     const librosGuardados: Libro[] = [];
 
     for (const datos of librosExternos) {
       const dto: CreateLibroDto = {
         titulo: datos.titulo!,
         autor: datos.autor,
-        anio: datos.anio,
+        anio: datos.anio ?? null,
         imagen_url: datos.imagen_url,
         descripcion: datos.descripcion,
         favorito: false,
+        fileUrl: datos.fileUrl ?? null,
+        tipo: datos.tipo ?? null,
         usuario_id: 1,
       };
+
       const libro = await this.create(dto);
       librosGuardados.push(libro);
     }
@@ -80,26 +119,28 @@ export class LibrosService {
     return librosGuardados;
   }
 
-    //Obtener 10–15 libros 
-  async obtenerLibrosRandom(): Promise<Partial<Libro>[]> {
-    const url = `https://openlibrary.org/search.json?q=book`;
-    const response = await firstValueFrom(this.http.get(url));
-    const docs = response.data.docs;
+  // Precargar lote inicial en la BD
+  async precargarLibrosIniciales(): Promise<Libro[]> {
+    const librosExternos = await this.buscarEnGutendex('frankenstein');
+    const librosGuardados: Libro[] = [];
 
-    // tomar los primeros 100 y elegir 10–15 random
-    const cantidad = Math.floor(Math.random() * (15 - 10 + 1)) + 10;
-    const seleccionados = docs
-      .sort(() => 0.5 - Math.random())
-      .slice(0, cantidad);
+    for (const datos of librosExternos) {
+      const dto: CreateLibroDto = {
+        titulo: datos.titulo!,
+        autor: datos.autor,
+        anio: datos.anio ?? null,
+        imagen_url: datos.imagen_url,
+        descripcion: datos.descripcion,
+        favorito: false,
+        fileUrl: datos.fileUrl ?? null,
+        tipo: datos.tipo ?? null,
+        usuario_id: 1,
+      };
 
-    return seleccionados.map((doc) => ({
-      titulo: doc.title ?? 'Sin título',
-      autor: doc.author_name?.[0] ?? 'Desconocido',
-      anio: doc.first_publish_year ?? null,
-      imagen_url: doc.cover_i
-        ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-        : null,
-      descripcion: doc.subject?.slice(0, 3).join(', ') ?? 'Sin descripción',
-    }));
+      const libro = await this.create(dto);
+      librosGuardados.push(libro);
+    }
+
+    return librosGuardados;
   }
 }
