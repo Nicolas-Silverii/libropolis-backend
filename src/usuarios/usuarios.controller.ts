@@ -5,29 +5,27 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 export class UsuariosController {
     constructor (private readonly usuariosService: UsuariosService) {}
 
-    //POST /usuarios/register
+  // Usuarios/register
   @Post('register')
   async register(@Body() dto: CreateUsuarioDto) {
     return this.usuariosService.create(dto);
   }
 
-  // GET /usuarios
+  // Usuarios
   @Get()
   async getAll() {
     return this.usuariosService.findAll();
   }
 
-   // GET /usuarios/:email
-  @Get(':email')
+   // Obtener usuarios por email
+  @Get('email/:email')
   async getByEmail(@Param('email') email: string) {
     return this.usuariosService.findByEmail(email);
   }
 
-  // DELETE /usuarios/:id
+  // Eliminar usuarios por id
   @Delete(':id')
   async remove(@Param('id') id: number) {
     return this.usuariosService.remove(id);
   }
-
-  
 }
