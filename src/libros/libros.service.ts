@@ -63,7 +63,6 @@ export class LibrosService {
   for (const doc of docs.slice(0, 10)) {
     const formats = doc.formats || {};
 
-    // Elegimos el primer formato disponible
     const fileUrl =
       formats['text/plain; charset=us-ascii'] ||
       formats['application/epub+zip'] ||
@@ -95,8 +94,6 @@ export class LibrosService {
 
   return libros;
 }
-
-
 
   // Buscar y guardar libros en la base desde Gutendex
   async crearDesdeGutendex(titulo: string): Promise<Libro[]> {
