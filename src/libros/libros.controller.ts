@@ -65,7 +65,7 @@ export class LibrosController {
     return this.librosService.crearDesdeGutendex(titulo);
   }
 
-// Precargar lote inicial en la BD (se ejecuta una sola vez)
+// Precargar lote inicial en la BD
 @Post('precargar')
 precargar(): Promise<Libro[]> {
   return this.librosService.precargarLibrosIniciales();
